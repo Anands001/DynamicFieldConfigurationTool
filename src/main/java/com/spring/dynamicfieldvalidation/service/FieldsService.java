@@ -59,6 +59,7 @@ public class FieldsService {
         System.out.println(fieldInfoDTO);
         Fields fields = fieldsRepo.findById(fieldInfoDTO.getFieldId()).get();
         validationRepo.deleteByFieldId(fields.getId());
+        fields.setDropDownId(fieldInfoDTO.getDropDownId());
         fields.setValidations(fieldInfoDTO.getValidations().stream().map(validation -> {
             validation.setField(fields);
             return validation;

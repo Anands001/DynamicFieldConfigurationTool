@@ -1,12 +1,11 @@
 package com.spring.dynamicfieldvalidation.controller;
 
+import com.spring.dynamicfieldvalidation.dto.DropDownDTO;
 import com.spring.dynamicfieldvalidation.dto.EntitiesListDTO;
 import com.spring.dynamicfieldvalidation.dto.EntityInfoDTO;
 import com.spring.dynamicfieldvalidation.dto.FieldInfoDTO;
-import com.spring.dynamicfieldvalidation.service.FieldsService;
-import com.spring.dynamicfieldvalidation.service.MetaDataService;
-import com.spring.dynamicfieldvalidation.service.ValidationService;
-import com.spring.dynamicfieldvalidation.service.WebClientService;
+import com.spring.dynamicfieldvalidation.entity.DropDown;
+import com.spring.dynamicfieldvalidation.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,6 +25,8 @@ public class GeneralController {
     WebClientService webClientService;
     @Autowired
     ValidationService validationService;
+    @Autowired
+    private DropDownService dropDownService;
 
     @PostMapping("sendEntities")
     public String sendEntities(@RequestBody EntitiesListDTO entitiesListDTO) {
@@ -53,6 +54,7 @@ public class GeneralController {
     @PostMapping("setValidation")
     public ResponseEntity setValidation(@RequestBody FieldInfoDTO fieldInfoDTO){
         fieldsService.saveValidation(fieldInfoDTO);
+        System.out.println(fieldInfoDTO);
         return ResponseEntity.ok(200);
     }
 
@@ -64,4 +66,29 @@ public class GeneralController {
         System.out.println(response);
         return ResponseEntity.ok(response);
     }
+    @PostMapping("setDropDown")
+    public String setDropDown(@RequestBody DropDownDTO dropDownDTO){
+        System.out.println(dropDownDTO);
+        String response = dropDownService.saveDropDown(dropDownDTO);
+        if("success".equals(response)){
+            return "DropDown saved successfully";
+        }else {
+            System.out.println(response);
+            return "DropDown not saved";
+        }
+    }
+    @PostMapping("updateDropDown")
+    public String updateDropDown(@RequestBody DropDownDTO dropDownDTO){
+        String response = dropDownService.updateDropDown(dropDownDTO);
+        if("success".equals(response)){
+            return "DropDown updated successfully";
+        }else {
+            return "DropDown not updated";
+        }
+    }
+    @GetMapping("getDropDown")
+    public List<DropDown> getDropDowns(){
+        return dropDownService.getAllDropDowns();
+    }
+
 }

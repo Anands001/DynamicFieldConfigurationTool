@@ -45,7 +45,7 @@
     <script>
       // Assuming you have axios library included in your project
       // import axios from 'axios';
-      let ip = "192.168.29.7";
+      let ip = "192.168.2.112";
       let navElements = [];
       function setNavElements(elements) {
         navElements = elements;
@@ -66,6 +66,37 @@
       // Call fetchData function
       // fetchData();
     </script>
+
+    <script>
+      let dropdown = {};
+      function adddropdown(){
+
+        let dropdownKey = document.getElementById("dropdownKey").value;
+        console.log("Dropdown Key ",dropdownKey)
+        let dropdownValue = document.getElementById("dropdownValue").value;
+        console.log("Dropdown Value ",dropdownValue)
+        // dropdown.put(dropdownKey,dropdownValue);
+        dropdown[dropdownKey] = dropdownValue;
+        console.log("Dropdown ",dropdown);
+        displayDropdown(); // Call the displayDropdown function here
+
+      }
+
+      function displayDropdown() {
+        // Get the dropdownView element
+        var dropdownView = document.getElementById("dropdownView");
+
+        // Convert the dropdown object to a string
+        var dropdownString = JSON.stringify(dropdown, null, 2);
+
+        // Display the string in the dropdownView element
+        dropdownView.textContent = dropdownString;
+      }
+
+    </script>
+
+
+
     <!--    <script>-->
     <!--        document.addEventListener('DOMContentLoaded', function () {-->
     <!--            // Get the table and the tbody-->
@@ -102,17 +133,50 @@
         // Get the table and the tbody
         const table = document.getElementById("myTable");
         const tbody = table.querySelector("tbody");
+        const thead = table.querySelector("thead");
+
 
         // Counter for row number
         let rowCount = 0; // Starting from 3 since you already have 3 rows
 
         // Function to add a new row based on the fields
         // Function to add a new row based on the fields
-
         window.addTableRow = function (element) {
+          // Removew add dropdown button if exists
+          let addDropDownButton1 = document.querySelector('#addDropDownButton');
+          console.log(addDropDownButton1);
+          if (addDropDownButton1) {
+            addDropDownButton1.parentNode.removeChild(addDropDownButton1);
+          }
+          document.getElementById('selected-entity').textContent=element.entityName;
+          // console.log("Element: ", element);
           fields = element.fields;
+          thead.innerHTML = "";
           tbody.innerHTML = "";
           rowCount = 0;
+
+          const headerRow = document.createElement("tr");
+
+          // Create header cells
+          const headerSno = document.createElement("th");
+          headerSno.textContent = "Sno";
+          headerRow.appendChild(headerSno);
+
+          const headerFieldName = document.createElement("th");
+          headerFieldName.textContent = "Field Name";
+          headerRow.appendChild(headerFieldName);
+
+          const headerFieldType = document.createElement("th");
+          headerFieldType.textContent = "Field Type";
+          headerRow.appendChild(headerFieldType);
+
+          const headerConfigCell = document.createElement("th");
+          headerConfigCell.textContent = "Config Validation";
+          headerRow.appendChild(headerConfigCell);
+
+          // Append header row to thead
+          thead.appendChild(headerRow);
+
           fields.forEach((field) => {
             rowCount++;
             const newRow = document.createElement("tr");
@@ -132,7 +196,7 @@
             const addButton = document.createElement("button");
             addButton.type = "button";
             addButton.className = "btn btn-outline-primary pd-2 mt-1";
-            addButton.textContent = "Add Validation";
+            addButton.textContent = "Configure Validation";
             addButton.onclick = function () {
               // Call openDynamicModal with the desired elements or data
               openDynamicModal(field);
@@ -266,6 +330,7 @@
         // Create JSON object
         var formData = {
           fieldId: document.getElementById("fieldId").value,
+          dropDownId : document.getElementById("dropdownSelect").value,
           validations: [
             { validationType: "required", validationValue: required },
             { validationType: "isEmail", validationValue: isEmail },
@@ -274,6 +339,10 @@
             { validationType: "min_length", validationValue: minLength },
             { validationType: "max_length", validationValue: maxLength },
             { validationType: "regex", validationValue: regex },
+            {
+                validationType: "dropdown",
+                validationValue: JSON.stringify(dropdown),
+            }
           ],
         };
 
@@ -320,8 +389,8 @@
         // for(validations in validations){
         //
         // }
-        let vals = ["isRequired","isEmail", "min_value", "max_value", "regex","min_length","max_length"];
-        console.log(validations);
+        let vals = ["isRequired","isEmail", "min_value", "max_value", "regex","min_length","max_length","dropdown"];
+        console.log("Validations :: ",validations);
         vals.forEach((val) => {
           let validation = validations.find(
             (obj) => obj.validationType === val
@@ -329,8 +398,15 @@
           console.log(validation);
           if (validation) {
             console.log(document.getElementById(val));
-            document.getElementById(val).value = validation.validationValue;
+            if (val === "dropdown") {
+              dropdown = JSON.parse(validation.validationValue);
+              displayDropdown();
+            } else {
+              document.getElementById(val).value = validation.validationValue;
+            }
+            // document.getElementById(val).value = validation.validationValue;
           }
+
         });
         // let min_value = validations.find(obj => obj.validationType === "min_value");
         // console.log(min_value);
@@ -344,27 +420,36 @@
         let min_max_value = ``;
         console.log("field ", field);
         console.log("field type:", field.fieldType);
-        if (
-          field.fieldType === "long" ||
-          field.fieldType === "float" ||
-          field.fieldType === "int"
-        ) {
-          min_max_value = `<div class="form-group mt-2">
-                                <label for="exampleInputEmail1">Min Value</label>
-                                <input type="text" class="form-control" id="min_value" aria-describedby="emailHelp" placeholder="min-value">
-                            </div>
-                            <div class="form-group">
-                                <label for="exampleInputPassword1">Max Value</label>
-                                <input type="text" class="form-control" id="max_value" placeholder="max-value">
-                            </div>`;
-        }
-        let min_max_length = ``;
-        if (
-                !(field.fieldType === "long") &&
-                !(field.fieldType === "float") &&
-                !(field.fieldType === "int")
-        ) {
-          min_max_length = `<div class="form-group mt-2">
+        // if (
+        //   field.fieldType === "long" ||
+        //   field.fieldType === "float" ||
+        //   field.fieldType === "int"
+        // ) {
+        //   min_max_value = `<div class="form-group mt-2">
+        //                         <label for="exampleInputEmail1">Min Value</label>
+        //                         <input type="text" class="form-control" id="min_value" aria-describedby="emailHelp" placeholder="min-value">
+        //                     </div>
+        //                     <div class="form-group">
+        //                         <label for="exampleInputPassword1">Max Value</label>
+        //                         <input type="text" class="form-control" id="max_value" placeholder="max-value">
+        //                     </div>`;
+        // }
+        // let min_max_length = ``;
+        // if (
+        //         !(field.fieldType === "long") &&
+        //         !(field.fieldType === "float") &&
+        //         !(field.fieldType === "int")
+        // ) {
+        //   min_max_length = `<div class="form-group mt-2">
+        //                                             <label for="exampleInputEmail1">Min Length</label>
+        //                                             <input type="text" class="form-control" id="min_length" aria-describedby="emailHelp" placeholder="min-length">
+        //                                         </div>
+        //                                         <div class="form-group">
+        //                                             <label for="exampleInputPassword1">Max Length</label>
+        //                                             <input type="text" class="form-control" id="max_length" placeholder="max-length">
+        //                                         </div>`;
+        // }
+        min_max_length = `<div class="form-group mt-2">
                                                     <label for="exampleInputEmail1">Min Length</label>
                                                     <input type="text" class="form-control" id="min_length" aria-describedby="emailHelp" placeholder="min-length">
                                                 </div>
@@ -372,7 +457,14 @@
                                                     <label for="exampleInputPassword1">Max Length</label>
                                                     <input type="text" class="form-control" id="max_length" placeholder="max-length">
                                                 </div>`;
-        }
+        min_max_value = `<div class="form-group mt-2">
+                                <label for="exampleInputEmail1">Min Value</label>
+                                <input type="text" class="form-control" id="min_value" aria-describedby="emailHelp" placeholder="min-value">
+                            </div>
+                            <div class="form-group">
+                                <label for="exampleInputPassword1">Max Value</label>
+                                <input type="text" class="form-control" id="max_value" placeholder="max-value">
+                            </div>`;
         console.log("min_max", min_max_length);
         formContent = `
             <div class="main-body">
@@ -415,15 +507,21 @@
                                                     <input type="text" class="form-control" placeholder="regex" id="regex">
                                                 </div>
                                                 <div class="form-group">
-                                                    <label for="exampleFormControlSelect1">Example select</label>
-                                                    <select class="form-control" id="exampleFormControlSelect1">
-                                                        <option>1</option>
-                                                        <option>2</option>
-                                                        <option>3</option>
-                                                        <option>4</option>
-                                                        <option>5</option>
-                                                    </select>
+
+                                                     <p id="dropdownView"></p>
+                                                    </div>
+                                                    <div class="form-group">
+                                                  <label for="dropdownSelect">Dropdown Select</label>
+                                                  <select class="form-control" id="dropdownSelect">
+                                                  <option readonly="">None</option>
+                                                    <!-- Dropdown options will be added here -->
+                                                  </select>
                                                 </div>
+<!--                                                 <button type="button" class="btn btn-primary mt-2" onclick="setFielddropdown()">Add DropDown</button>-->
+
+                                                    <div class="form-group">
+                                                    </div>
+
                                                 <div class="form-group">
                                                     <label for="exampleFormControlTextarea1">Example textarea</label>
                                                     <textarea class="form-control" id="exampleFormControlTextarea1" rows="3"></textarea>
@@ -442,7 +540,22 @@
         //   document.getElementById("min_value").style.display = "block";
         //   document.getElementById("max_value").style.display = "block";
         // }
+        axios.get(`http://${ip}:9090/getDropDown`)
+                .then((response) => {
+                  // Get the select element
+                  const select = document.getElementById('dropdownSelect');
 
+                  // Populate the select element with the dropdowns
+                  response.data.forEach((dropdown, index) => {
+                    const option = document.createElement('option');
+                    option.value = dropdown.id;
+                    option.textContent = dropdown.dropDownName;
+                    select.appendChild(option);
+                  });
+                })
+                .catch((error) => {
+                  console.error("Error fetching dropdowns:", error);
+                });
         const dynamicModalObject = {
           title: "Validation Controls",
           body: formContent,
@@ -477,6 +590,325 @@
         max-width: 90%; /* You can adjust the percentage based on your preference */
       }
     </style>
+<!--    Script to generate Dropdown page-->
+    <script>
+
+      function generateDropdownPage() {
+        const table = document.getElementById("myTable");
+        const parentElement = table.parentElement;
+
+        const tbody = table.querySelector("tbody");
+        const thead = table.querySelector("thead");
+
+        thead.innerHTML = "";
+        tbody.innerHTML = "";
+
+        let addDropDownButton = parentElement.querySelector('#addDropDownButton');
+
+      // If the button does not exist, create and add it
+        if (!addDropDownButton) {
+          addDropDownButton = document.createElement("button");
+          addDropDownButton.type = "button";
+          addDropDownButton.id = "addDropDownButton";
+          addDropDownButton.className = "btn btn-outline-primary pd-2 mt-1";
+          addDropDownButton.textContent = "Add DropDown";
+          addDropDownButton.onclick = function () {
+            // Call openDynamicModal with the desired elements or data
+            openAddDropDownModal();
+          };
+          parentElement.insertBefore(addDropDownButton, table);
+        }
+
+        const headerRow = document.createElement("tr");
+
+        // Create header cells
+        const headerSerialCell = document.createElement("th");
+        headerSerialCell.textContent = "Serial Number";
+        headerRow.appendChild(headerSerialCell);
+
+        const headerNameCell = document.createElement("th");
+        headerNameCell.textContent = "Name";
+        headerRow.appendChild(headerNameCell);
+
+        const headerFieldsCell = document.createElement("th");
+        headerFieldsCell.textContent = "Fields";
+        headerRow.appendChild(headerFieldsCell);
+
+        // Append header row to thead
+        thead.appendChild(headerRow);
+
+        // Assuming you have axios library included in your project
+
+        axios.get(`http://${ip}:9090/getDropDown`)
+                .then((response) => {
+                  console.log(response.data);
+                  const dropdownData = response.data; // Corrected assignment
+
+                  dropdownData.forEach((dropdown, index) => {
+                    // Parse the dropDownFields JSON string into an object
+                    const dropDownFields = JSON.parse(dropdown.dropDownFields);
+
+                    // Create a new row
+                    const row = document.createElement("tr");
+
+                    // Create a cell for the serial number and add it to the row
+                    const snoCell = document.createElement("td");
+                    snoCell.textContent = index + 1;
+                    row.appendChild(snoCell);
+
+                    // Create a cell for the dropdown name and add it to the row
+                    const nameCell = document.createElement("td");
+                    nameCell.textContent = dropdown.dropDownName;
+                    row.appendChild(nameCell);
+
+                    // Create a cell for the dropdown fields and add it to the row
+                    const fieldsCell = document.createElement("td");
+                    // Iterate over the dropDownFields object to display key-value pairs
+                    let fieldsText = "";
+                    for (const key in dropDownFields) {
+                      fieldsText += `${key}: ${dropDownFields[key]}, `;
+                    }
+                    // Remove trailing comma and space
+                    fieldsText = fieldsText.slice(0, -2);
+                    fieldsCell.textContent = fieldsText;
+                    row.appendChild(fieldsCell);
+
+                    const editDropDownButton = document.createElement("button");
+                    editDropDownButton.type = "button";
+                    editDropDownButton.className = "btn btn-outline-primary pd-2 mt-1";
+                    editDropDownButton.textContent = "Edit DropDown";
+                    editDropDownButton.onclick = function () {
+                      // Call openDynamicModal with the desired elements or data
+                      openEditDropDownModal(dropdown);
+                    };
+                    row.appendChild(editDropDownButton);
+
+                    // Add the row to the table body
+                    tbody.appendChild(row);
+                  });
+                })
+                .catch((error) => {
+                  console.error("Error fetching data:", error);
+                });
+      }
+
+
+    </script>
+    <script>
+      function generateDropDownModal(content) {
+        // Get the modal content container
+        const modalContent = document.querySelector(
+                "#dynamicModal .modal-content"
+        );
+
+        // Clear existing content
+        modalContent.innerHTML = "";
+        // Create and append new content based on the provided object
+        modalContent.innerHTML = content;
+
+        // Show the modal
+        $("#dynamicModal").modal("show");
+      }
+    function openEditDropDownModal(dropdown) {
+    // Example dynamic modal object
+
+    console.log("DropDown ", dropdown);
+
+    let formContentDropDown = `
+    <div class="main-body">
+      <div class="page-wrapper">
+        <!-- [ Main Content ] start -->
+        <div class="row">
+          <div class="col-sm-12">
+            <div class="card">
+              <div class="card-header">
+                <h5>${dropdown.dropDownName}</h5>
+              </div>
+              <div class="card-body">
+                <h5>DropDown controls</h5>
+                <hr>
+                <div class="row">
+                  <div class="col-md-6">
+                    <form>
+                      <input type="hidden" id="fieldId" value="${dropdown.id}">
+                      <div class="form-group">
+                        <label>DropDown Name</label>
+                        <input type="text" class="form-control" placeholder="DropDOwn Name" id= "dropDownName" value="${dropdown.dropDownName}">
+                      </div>
+                      <div class="form-group">
+                        <label for="exampleFormControlTextarea1">DropDown Fields - Json Object</label>
+                        <textarea class="form-control"  id="dropDownFields" rows="5">${dropdown.dropDownFields}</textarea>
+                      </div>
+                      <button type="button" class="btn btn-primary" onclick="updateDropDown1('${dropdown.id}')">Submit</button>
+                    </form>
+                  </div>
+                  <div class="col-md-6">
+                    <form>
+
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    `;
+    // if (field.fieldType.lower === "String") {
+    //   document.getElementById("min_value").style.display = "block";
+    //   document.getElementById("max_value").style.display = "block";
+    // }
+
+    const dynamicDropDownModalObject = {
+    title: "DropDown Controls",
+    body: formContentDropDown,
+    footer:
+    '<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>',
+    };
+
+    // Convert the object properties to an HTML structure
+    const modalHTML = `
+    <div class="modal-header">
+      <h5 class="modal-title">${dynamicDropDownModalObject.title}</h5>
+      <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+    <div class="modal-body">
+      ${dynamicDropDownModalObject.body}
+    </div>
+    <div class="modal-footer">
+      ${dynamicDropDownModalObject.footer}
+    </div>
+    `;
+
+    // Call the function with the generated HTML
+    generateDropDownModal(modalHTML);
+
+    }
+    function openAddDropDownModal() {
+        // Example dynamic modal object
+
+
+        let formAddDropDown = `
+    <div class="main-body">
+      <div class="page-wrapper">
+        <!-- [ Main Content ] start -->
+        <div class="row">
+          <div class="col-sm-12">
+            <div class="card">
+              <div class="card-header">
+              </div>
+              <div class="card-body">
+                <h5>DropDown controls</h5>
+                <hr>
+                <div class="row">
+                  <div class="col-md-6">
+                    <form>
+                      <div class="form-group">
+                        <label>DropDown Name</label>
+                        <input type="text" class="form-control" placeholder="Enter DropDown Name" id="dropDownName">
+                      </div>
+                      <div class="form-group">
+                        <label for="exampleFormControlTextarea1">DropDown Fields - Json Object</label>
+                        <textarea class="form-control" id="dropDownFields" rows="5"></textarea>
+                      </div>
+                      <button type="button" class="btn btn-primary" onclick="addDropDown1()">Submit</button>
+                    </form>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    `;
+        // if (field.fieldType.lower === "String") {
+        //   document.getElementById("min_value").style.display = "block";
+        //   document.getElementById("max_value").style.display = "block";
+        // }
+
+        const dynamicDropDownModalObject = {
+          title: "DropDown Controls - Add DropDown",
+          body: formAddDropDown,
+          footer:
+                  '<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>',
+        };
+
+        // Convert the object properties to an HTML structure
+        const modalAddDropDownHTML = `
+    <div class="modal-header">
+      <h5 class="modal-title">${dynamicDropDownModalObject.title}</h5>
+      <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+    <div class="modal-body">
+      ${dynamicDropDownModalObject.body}
+    </div>
+    <div class="modal-footer">
+      ${dynamicDropDownModalObject.footer}
+    </div>
+    `;
+
+        // Call the function with the generated HTML
+        generateDropDownModal(modalAddDropDownHTML);
+
+      }
+      function addDropDown1(){
+        let dropDownName = document.getElementById("dropDownName").value;
+        let dropDownFields = document.getElementById("dropDownFields").value;
+        console.log("DropDown Name ",dropDownName)
+        console.log("DropDown Fields ",dropDownFields)
+        // dropdown.put(dropdownKey,dropdownValue);
+        // dropdown[dropdownKey] = dropdownValue;
+        // console.log("Dropdown ",dropdown);
+        // displayDropdown(); // Call the displayDropdown function here
+        let formData = {
+          dropDownName: dropDownName,
+          dropDownFields: JSON.parse(dropDownFields)
+        }
+        console.log(formData);
+        axios
+                .post(`http://${ip}:9090/setDropDown`, formData)
+                .then(function (response) {
+                  console.log(response.data);
+                  // Handle success, if needed
+                })
+                .catch(function (error) {
+                  console.error(error);
+                  // Handle error, if needed
+                });
+      }
+      function updateDropDown1(dropDownId){
+        let dropDownName = document.getElementById("dropDownName").value;
+        let dropDownFields = document.getElementById("dropDownFields").value;
+        console.log("DropDown Name ",dropDownName)
+        console.log("DropDown Fields ",dropDownFields)
+        // dropdown.put(dropdownKey,dropdownValue);
+        // dropdown[dropdownKey] = dropdownValue;
+        // console.log("Dropdown ",dropdown);
+        // displayDropdown(); // Call the displayDropdown function here
+        let formData = {
+          dropDownName: dropDownName,
+          dropDownFields: JSON.parse(dropDownFields)
+        }
+        console.log(formData);
+        axios
+                .post(`http://${ip}:9090/updateDropDown`, formData)
+                .then(function (response) {
+                  console.log(response.data);
+                  // Handle success, if needed
+                })
+                .catch(function (error) {
+                  console.error(error);
+                  // Handle error, if needed
+                });
+      }
+    </script>
   </head>
 
   <body>
@@ -519,9 +951,18 @@
         </div>
         <div class="navbar-content scroll-div">
           <ul class="nav pcoded-inner-navbar" id="navList">
-            <!--                    <li class="nav-item pcoded-menu-caption">-->
-            <!--                        <label>Navigation</label>-->
-            <!--                    </li>-->
+              <li class="nav-item pcoded-menu-caption">
+                  <label>DropDown Details</label>
+              </li>
+            <li
+            >
+              <a class="nav-link" onclick="generateDropdownPage()"
+              ><span class="pcoded-micon"
+              ><i class="feather icon-server"></i></span
+              ><span class="pcoded-mtext">DropDown Details</span></a
+              >
+            </li>
+            </li>
             <!--                    <li data-username="dashboard Default Ecommerce CRM Analytics Crypto Project" class="nav-item">-->
             <!--                        <a href="index.html" class="nav-link "><span class="pcoded-micon"><i class="feather icon-home"></i></span><span class="pcoded-mtext">Dashboard</span></a>-->
             <!--                    </li>-->
@@ -810,7 +1251,7 @@
 <!--              </div>-->
 <!--            </div>-->
             <!-- [ breadcrumb ] end -->
-            <div class="main-body">
+            <div class="main-body" id = "main-body">
               <div class="page-wrapper">
                 <!-- [ Main Content ] start -->
                 <div class="row">
@@ -818,7 +1259,7 @@
                   <div class="col-xl-12">
                     <div class="card">
                       <div class="card-header">
-                        <h5>Fields</h5>
+                        <h5>Fields - <span id="selected-entity"></span></h5>
                         <!--                                            <span class="d-block m-t-5">use class <code>table-hover</code> inside table element</span>-->
                       </div>
                       <div class="card-block table-border-style">
@@ -833,24 +1274,7 @@
                               </tr>
                             </thead>
                             <tbody>
-                              <tr>
-                                <th scope="row">1</th>
-                                <td>Mark</td>
-                                <td>Otto</td>
-                                <td>@mdo</td>
-                              </tr>
-                              <tr>
-                                <th scope="row">2</th>
-                                <td>Jacob</td>
-                                <td>Thornton</td>
-                                <td>@fat</td>
-                              </tr>
-                              <tr>
-                                <th scope="row">3</th>
-                                <td>Larry</td>
-                                <td>the Bird</td>
-                                <td>@twitter</td>
-                              </tr>
+
                             </tbody>
                           </table>
                         </div>

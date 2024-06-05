@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-;
+import com.google.gson.Gson;
 
 @Service
 public class ValidationService {
@@ -23,6 +23,9 @@ public class ValidationService {
 
     @Autowired
     MetaDataService metaDataService;
+
+    @Autowired
+    DropDownService dropDownService;
 
     public Validation save(Validation validation){
         Validation validation1 = validationRepo.save(validation);
@@ -47,6 +50,7 @@ public class ValidationService {
         metaData.setEntityId(id);
         fieldsService.getFieldsByMetaDataId(metaData).forEach(fields -> {
             if(fields.getValidations() != null){
+                System.out.println("Fields: " + fields.getFieldName() + " Validations: " + fields.getValidations());
                 fields.getValidations().forEach(validation -> {
                     if(validation.getValidationType().equals("required")){
                         if(!validationServices.required((String) data.get(fields.getFieldName()))){
@@ -88,9 +92,37 @@ public class ValidationService {
                             }
                         }
                     }
+//                    if(validation.getValidationType().equals("dropdown")){
+//                        if(data.get(fields.getFieldName()) != null){
+//                            String dropdownValue = data.get(fields.getFieldName()).toString();
+//                            HashMap<String, Object> dropdown = new Gson().fromJson(validation.getValidationValue(), HashMap.class);
+//                            System.out.println("Dropdown value: " + dropdown);
+//                            if(dropdown!= null && !dropdown.containsKey(dropdownValue)){
+//                                errors.add("Dropdown value " + dropdownValue + " does not match any dropdown key");
+//                            }
+//                        }
+//                    }
+
                 });
+
+            }
+            if(fields.getDropDownId() != null){
+                if(data.get(fields.getFieldName()) != null){
+                    String dropdownValue = data.get(fields.getFieldName()).toString();
+                    System.out.println("Dropdown value: " + dropdownValue);
+                    System.out.println("Dropdown id: " + fields.getDropDownId());
+                    System.out.println("Dropdown db value: " + dropDownService.getDropDownById(fields.getDropDownId()));
+                    if(dropDownService.getDropDownById(fields.getDropDownId()) != null) {
+                        HashMap dropdown = new Gson().fromJson(dropDownService.getDropDownById(fields.getDropDownId()), HashMap.class);
+                        System.out.println("Dropdown value: " + dropdown);
+                        if (dropdown != null && !dropdown.containsKey(dropdownValue)) {
+                            errors.add("Dropdown value " + dropdownValue + " does not match any dropdown key");
+                        }
+                    }
+                }
             }
         });
+
         return errors;
     }
 

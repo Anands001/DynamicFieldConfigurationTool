@@ -10,5 +10,6 @@ public class FieldInfoDTO {
     private String fieldId;
     private String fieldName;
     private String fieldType;
+    private String dropDownId;
     private List<Validation> validations;
 }

@@ -30,5 +30,6 @@ public class Fields {
     Boolean isRequired = false;
     Boolean isEmail = false;
     Boolean isPhone = false;
+    String DropDownId;
 
 }

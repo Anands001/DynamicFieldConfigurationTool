@@ -9,5 +9,6 @@ import java.util.List;
 public class FieldsDto {
     private String fieldName;
     private String fieldType;
+    private String dropDownId;
     List<Validation> validationsList;
 }
